@@ -1,0 +1,13 @@
+allowBuilds:
+  '@parcel/watcher': false
+  '@prisma/engines': true
+  '@tailwindcss/oxide': false
+  esbuild: false
+  maplibre-gl: false
+  msgpackr-extract: true
+  prisma: true
+  unrs-resolver: false
+  vue-demi: false
+  workerd: true
+minimumReleaseAgeExclude:
+  - '@prisma/*'

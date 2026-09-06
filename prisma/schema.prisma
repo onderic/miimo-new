@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  FULFILLED
+  CANCELLED
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  email        String  @unique
+  name         String?
+  passwordHash String?
+  role         Role    @default(USER)
+  posts        Post[]
+  orders       Order[]
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  active      Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id          Int           @id @default(autoincrement())
+  name        String
+  slug        String        @unique
+  sku         String        @unique
+  description String?
+  priceCents  Int
+  stock       Int           @default(0)
+  imageUrl    String?
+  status      ProductStatus @default(DRAFT)
+  category    Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId  Int
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  orderItems  OrderItem[]
+
+  @@index([categoryId])
+  @@index([status])
+}
+
+model Order {
+  id              Int         @id @default(autoincrement())
+  reference       String      @unique
+  status          OrderStatus @default(PENDING)
+  customerName    String
+  email           String
+  phone           String
+  deliveryAddress String
+  totalCents      Int
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId          Int?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([email])
+  @@index([status])
+}
+
+model OrderItem {
+  id             Int     @id @default(autoincrement())
+  quantity       Int
+  unitPriceCents Int
+  productName    String
+  product        Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId      Int
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId        Int
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model NewsletterSubscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+  @@index([createdAt])
+}
+
+model Post {
+  id        Int     @id @default(autoincrement())
+  title     String
+  content   String?
+  published Boolean @default(false)
+  author    User?   @relation(fields: [authorId], references: [id])
+  authorId  Int?
+}
